@@ -127,3 +127,4 @@ class UI extends DOM {
 
 const game = new Game(4);
 const ui = new UI(game);
+
