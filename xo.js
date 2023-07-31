@@ -125,5 +125,5 @@ class UI extends DOM {
   }
 }
 
-const game = new Game(4);
+const game = new Game(3);
 const ui = new UI(game);
