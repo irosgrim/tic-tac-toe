@@ -49,36 +49,75 @@ class Game {
     this.grid = Array(this.size).fill().map(() => Array(this.size).fill(''));
     this.currentPlayer = currentPlayer;
     this.gameOver = false;
+    this.player = document.getElementById("player");
+    this.player.innerText = currentPlayer;
   }
 
   move(y, x) {
     this.grid[y][x] = this.currentPlayer;
+    this.player.innerText = this.currentPlayer;
     const winner = this.checkWinner();
     if (winner) {
       console.log("winner is: " + winner);
+      this.player.innerText = winner + " wins";
+      document.getElementById("score").innerHTML += `<li> Winner ${winner}</li>`;
+      const scoreBtn = document.getElementById("score-btn");
       this.gameOver = true;
     }
     this.currentPlayer = this.currentPlayer === "o" ? "x" : "o";
   }
 
   checkWinner() {
-    const winningSequences = [
-      ...Array(this.size).fill().map((_, y) => this.grid[y].join('')),
-      ...Array(this.size).fill().map((_, x) => Array(this.size).fill().map((_, y) => this.grid[y][x]).join('')),
-      Array(this.size).fill().map((_, i) => this.grid[i][i]).join(''),
-      Array(this.size).fill().map((_, i) => this.grid[i][this.size-i-1]).join('')
-    ];
+    // Determine winning sequence length
+    const winningSequenceLength = this.size >= 4 ? 4 : 3;
+    const winningStringX = "x".repeat(winningSequenceLength);
+    const winningStringO = "o".repeat(winningSequenceLength);
 
-    if (winningSequences.includes("x".repeat(this.size))) return "X";
-    if (winningSequences.includes("o".repeat(this.size))) return "O";
+    const winningSequences = [
+        // horizontal
+        ...Array(this.size).fill().map((_, y) => this.grid[y].join('')),
+
+        // vertical
+        ...Array(this.size).fill().map((_, x) => Array(this.size).fill().map((_, y) => this.grid[y][x]).join('')),
+
+        // diagonal (top-left to bottom-right for all possible diagonals)
+        ...Array(this.size*2-1).fill().map((_, shift) => 
+        Array(this.size).fill().map((_, i) => {
+            const y = i;
+            const x = shift - i;
+            if (x >= 0 && x < this.size) {
+            return this.grid[y][x];
+            } else {
+            return '';
+            }
+        }).join('')),
+
+        // diagonal (top-right to bottom-left for all possible diagonals)
+        ...Array(this.size*2-1).fill().map((_, shift) => 
+            Array(this.size).fill().map((_, i) => {
+                const y = i;
+                const x = this.size - 1 - (shift - i);
+                if (x >= 0 && x < this.size) {
+                return this.grid[y][x];
+                } else {
+                return '';
+                }
+            }).join(''))
+        ];
+
+    for (const sequence of winningSequences) {
+        if (sequence.includes(winningStringX)) return "X";
+        if (sequence.includes(winningStringO)) return "O";
+    }
 
     return null;
-  }
+}
 
   restart() {
     this.grid = Array(this.size).fill().map(() => Array(this.size).fill(''));
     this.gameOver = false;
-    this.currentPlayer = "o";
+    this.currentPlayer = "x";
+    this.player.innerText = this.currentPlayer;
     const cells = document.querySelectorAll(".btn");
     cells.forEach((cell) => {
         cell.innerText = ""; 
@@ -121,9 +160,11 @@ class UI extends DOM {
       }
     }
     els.forEach((el) => this.render(el, this.board));
-    this.render(this.createElement("nav", {className: "menu"}, this.createElement("button", {title: "restart", className: "restart", id: "restart", onClick: () => this.game.restart()}, this.createTextElement("Restart"))), document.body)
+    this.render(this.createElement("nav", {className: "menu"}, this.createElement("button", {title: "restart", className: "restart", id: "restart", onClick: () => this.game.restart()}, this.createTextElement("Restart"))), document.getElementById("restart"));
+    this.render(this.createElement("ul", {className: "score", id: "score"}), document.body);
   }
 }
 
 const game = new Game(3);
 const ui = new UI(game);
+
